@@ -41,5 +41,17 @@ class ShoppingcartServiceSpec extends AsyncWordSpec with Matchers with BeforeAnd
         answer should ===(expected)
       }
     }
+
+    "allow items to be removed from the cart" in {
+      for {
+        _ <- client.removeItemFromCart("21").invoke(RemoveItemRequest("something"))
+        _ <- client.removeItemFromCart("21").invoke(RemoveItemRequest("shouldn't be in the list"))
+        _ <- client.removeItemFromCart("21").invoke(RemoveItemRequest("something"))
+        answer <- client.showCart("21").invoke()
+        expected = ReadShoppingcartState(List("another something"))
+      } yield {
+        answer should ===(expected)
+      }
+    }
   }
 }

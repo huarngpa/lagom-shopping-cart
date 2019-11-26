@@ -30,13 +30,27 @@ class ShoppingcartEntitySpec extends WordSpec with Matchers with BeforeAndAfterA
       outcome.replies should contain only expected
     }
 
-    "allow adding items to the cart" in withTestDriver { driver =>
+    def addToCart(driver: PersistentEntityTestDriver[ShoppingcartCommand[_], ShoppingcartEvent, ShoppingcartState]) = {
       val addOutcome = driver.run(AddItemToCartCommand("something"))
       addOutcome.events should contain only AddItemToCartEvent("something")
       val addAnotherOutcome = driver.run(AddItemToCartCommand("another something"))
       addAnotherOutcome.events should contain only AddItemToCartEvent("another something")
       val showOutcome = driver.run(ShowCartCommand)
       showOutcome.replies should contain only ReadShoppingcartState(List("another something", "something"))
+    }
+
+    "allow adding items to the cart" in withTestDriver { driver =>
+      addToCart(driver)
+    }
+
+    "allow removing items from the cart" in withTestDriver { driver =>
+      addToCart(driver)
+      val removeOutcome = driver.run(RemoveItemFromCartCommand("something"))
+      removeOutcome.events should contain only RemoveItemFromCartEvent("something")
+      val anotherRemoveOutcome = driver.run(RemoveItemFromCartCommand("something"))
+      anotherRemoveOutcome.events should contain only RemoveItemFromCartEvent("something")
+      val showOutcome = driver.run(ShowCartCommand)
+      showOutcome.replies should contain only ReadShoppingcartState(List("another something"))
     }
   }
 }
